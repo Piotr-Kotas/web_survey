@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <style>
+        .user-management-table {
+            width: 80%;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+        .user-management-table th, .user-management-table td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+        .user-management-table th {
+            background-color: #f2f2f2;
+        }
+        .form-input {
+            width: 100%;
+        }
+        .bottom-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <br><br>
+    <div style="text-align: center; font-size: 24px; font-weight: bold;"> User Management </div>
+    <br><br><br><br>
+    <div>       
+        <table class="user-management-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>New Password</th>
+                    <th>Role</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user[0] }}</td>
+                    <td>{{ user[1] }}</td>
+                    <td>
+                        <form action="/update_user" method="post" style="display: inline;">
+                            <input type="hidden" name="username" value="{{ user[0] }}">
+                            <input type="password" name="newpassword" class="form-input">
+                        </form>
+                    </td>
+                    <td>
+                        <select name="role" class="form-input">
+                            <option value="admin" {% if user[2] == 'admin' %}selected{% endif %}>Admin</option>
+                            <option value="manager" {% if user[2] == 'manager' %}selected{% endif %}>Manager</option>
+                            <option value="user" {% if user[2] not in ['admin', 'manager'] %}selected{% endif %}>User</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="submit"class="btn btn-secondary">Save</button>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteModal" data-username="{{ user[0] }}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <br><br><br><br>
+    <div class="bottom-buttons">
+        <form action="/logout" method="get" style="display: inline;">
+            <button type="submit"class="btn btn-secondary">Logout</button>
+        </form>
+        <form action="{% if session['role'] == 'admin' %}/admin_logged_in{% else %}/logout{% endif %}" method="get" style="display: inline;">
+            <button type="submit"class="btn btn-secondary">Back</button>
+        </form>
+        <form action="/admin_register" method="get" style="display: inline;">
+            <button type="submit"class="btn btn-secondary">Add User</button>
+        </form>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Confirm Account Deletion</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the account for <span id="usernameToDelete"></span>? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteButton"data-dismiss="modal">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        let usernameToDelete = '';
+    
+        $('#confirmDeleteModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            usernameToDelete = button.data('username');
+            $('#usernameToDelete').text(usernameToDelete);
+        });
+    
+        // Close modal on button click
+        $('.modal-footer .btn').click(function() {
+            $('#confirmDeleteModal').modal('hide');
+        });
+    
+        document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+            fetch('/delete_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: usernameToDelete })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload(); // Reload the page after successful deletion
+                }
+            });
+        });
+    </script>
+</body>
+</html>

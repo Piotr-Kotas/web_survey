@@ -1,0 +1,115 @@
+<!-- templates/manager_logged_in.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Survey</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        form div {
+            margin: 10px 0;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        .buttons button {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manager Survey</h1>
+    <form id="manager-survey-form" action="/manager_logged_in" method="post" style="display: flex; flex-direction: column; align-items: center;">
+        <div>
+            <label>Select User:</label>
+            <select name="username">
+                {% for user in users %}
+                    <option value="{{ user }}">{{ user }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% for question in questions %}
+            <div style="text-align: center; margin-bottom: 20px; width: 100%; max-width: 600px;">
+                <label style="display: block; margin-bottom: 10px; word-wrap: break-word; width: 100%;">{{ loop.index }}. {{ question[0] }}</label>
+                <select name="q{{ loop.index }}" style="width: 100%; max-width: 200px;">
+                    <option value="I can">I can</option>
+                    <option value="I can't">I can't</option>
+                    <option value="I'll learn">I'll learn</option>
+                </select>
+            </div>
+        {% endfor %}
+        <!-- Button group -->
+    <div class="buttons">
+        <a href="/logout"><button type="button"class="btn btn-secondary">Logout</button></a>
+        <button form="manager-survey-form" type="submit"class="btn btn-primary">Submit</button>
+        <button type="button" class="btn btn-secondary" onclick="exportToExcel()">Export to Excel</button>
+    </div>
+    </form>
+    <!-- Export button -->
+    
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Popup Dialog -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Answers submitted successfully.
+                </div>
+                <div class="modal-footer">
+                    <a href="/logout" class="btn btn-secondary">Logout</a>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to show the popup if there is a success message -->
+    <script>
+        {% if success %}
+            $(document).ready(function(){
+                $('#successModal').modal('show');
+            });
+        {% endif %}
+    </script>
+    <script>
+        function exportToExcel() {
+            $.ajax({
+                type: 'POST',
+                url: '/export_excel',
+                success: function(response) {
+                    // Handle success response
+                    alert(response.message);
+                },
+                error: function(xhr, status, error) {
+                    // Handle error response
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
